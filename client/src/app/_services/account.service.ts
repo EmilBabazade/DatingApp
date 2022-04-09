@@ -1,26 +1,26 @@
-import { HttpClient } from "@angular/common/http";
-import { Injectable } from "@angular/core";
-import { Observable, ReplaySubject } from "rxjs";
-import { map } from "rxjs/operators";
-import { User } from "../_models/user";
+import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { Observable, ReplaySubject } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { User } from '../_models/user';
 
 @Injectable({
-  providedIn: "root"
+  providedIn: 'root'
 })
 export class AccountService {
-  readonly baseUrl = "https://localhost:5001/api/";
+  readonly baseUrl = 'https://localhost:5001/api/';
   private currentUserSource = new ReplaySubject<User| null>(1);
   currentUser$: Observable<User | null> = this.currentUserSource.asObservable();
 
   constructor(private readonly http: HttpClient) { }
 
   login(model: any): Observable<any> {
-    return this.http.post(this.baseUrl + "account/login", model)
+    return this.http.post(this.baseUrl + 'account/login', model)
       .pipe(
         map((response: User) => {
           const user = response;
           if(user) {
-            localStorage.setItem("user", JSON.stringify(user));
+            localStorage.setItem('user', JSON.stringify(user));
             this.currentUserSource.next(user);
           }
         })
@@ -28,11 +28,11 @@ export class AccountService {
   }
 
   register(model: any): Observable<any> {
-    return this.http.post(this.baseUrl + "account/register", model)
+    return this.http.post(this.baseUrl + 'account/register', model)
       .pipe(
         map((user: User) => {
           if(user) {
-            localStorage.setItem("user", JSON.stringify(user));
+            localStorage.setItem('user', JSON.stringify(user));
             this.currentUserSource.next(user);
           }
         })
@@ -44,7 +44,7 @@ export class AccountService {
   }
 
   logout() {
-    localStorage.removeItem("user");
+    localStorage.removeItem('user');
     this.currentUserSource.next(null);
   }
 }
