@@ -1,4 +1,5 @@
-﻿using API.DTOs;
+﻿using API.Data;
+using API.DTOs;
 using API.Entities;
 using API.Extensions;
 using AutoMapper;
@@ -23,6 +24,7 @@ namespace API.Helpers
                         )
                 );
             CreateMap<Photo, PhotoDTO>();
+            CreateMap<MemberUpdateDTO, AppUser>();
         }
     }
 }
