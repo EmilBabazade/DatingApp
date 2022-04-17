@@ -14,8 +14,8 @@ export class NavComponent {
 
   constructor(
     public readonly accountService: AccountService,
-    private router: Router,
-    private toastr: ToastrService){}
+    private readonly router: Router,
+    private readonly toastr: ToastrService){}
 
   login() {
     this.accountService.login(this.model)
