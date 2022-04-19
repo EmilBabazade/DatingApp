@@ -32,7 +32,7 @@ namespace API.Controllers
         public ActionResult<string> GetServerError()
         {
             AppUser thing = _context.Users.Find(-1);
-            var thingToReturn = thing.ToString();
+            string thingToReturn = thing.ToString();
             return thingToReturn;
         }
 
