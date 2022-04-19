@@ -2,6 +2,7 @@ using API.Data;
 using API.DTOs;
 using API.Entities;
 using API.Extensions;
+using API.Helpers;
 using API.Interfaces;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
@@ -24,9 +25,10 @@ namespace API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<MemberDTO>>> GetUsers()
+        public async Task<ActionResult<IEnumerable<MemberDTO>>> GetUsers([FromQuery] UserParams userParams)
         {
-            var users = await _userRepository.GetMembersAsync();
+            PagedList<MemberDTO> users = await _userRepository.GetMembersAsync(userParams);
+            Response.AddPaginationHeader(users.CurrentPage, users.PageSize, users.TotalCount, users.TotalPages);
             return Ok(users);
         }
 
@@ -39,7 +41,7 @@ namespace API.Controllers
         [HttpPut]
         public async Task<ActionResult> UpdateUser(MemberUpdateDTO memberUpdateDTO)
         {
-            var user = await _userRepository.GetUserByUserNameAsync(User.GetUsername());
+            AppUser user = await _userRepository.GetUserByUserNameAsync(User.GetUsername());
 
             _mapper.Map(memberUpdateDTO, user);
 
@@ -53,15 +55,15 @@ namespace API.Controllers
         [HttpPost("add-photo")]
         public async Task<ActionResult<PhotoDTO>> AddPhoto(IFormFile file)
         {
-            var user = await _userRepository.GetUserByUserNameAsync(User.GetUsername());
-            var result = await _photoService.AddPhotoAsync(file);
+            AppUser user = await _userRepository.GetUserByUserNameAsync(User.GetUsername());
+            CloudinaryDotNet.Actions.ImageUploadResult result = await _photoService.AddPhotoAsync(file);
 
             if (result.Error != null)
             {
                 return BadRequest(result.Error.Message);
             }
 
-            var photo = new Photo
+            Photo photo = new Photo
             {
                 Url = result.SecureUrl.AbsoluteUri,
                 PublicId = result.PublicId
@@ -85,13 +87,13 @@ namespace API.Controllers
         [HttpPut("set-main-photo/{photoId}")]
         public async Task<ActionResult> SetMainPhoto(int photoId)
         {
-            var user = await _userRepository.GetUserByUserNameAsync(User.GetUsername());
+            AppUser user = await _userRepository.GetUserByUserNameAsync(User.GetUsername());
 
-            var photo = user.Photos.FirstOrDefault(p => p.Id == photoId);
+            Photo photo = user.Photos.FirstOrDefault(p => p.Id == photoId);
 
             if (photo.IsMain) return BadRequest("This is already your main photo");
 
-            var currentMain = user.Photos.FirstOrDefault(p => p.IsMain);
+            Photo currentMain = user.Photos.FirstOrDefault(p => p.IsMain);
             if (currentMain != null) currentMain.IsMain = false;
             photo.IsMain = true;
 
@@ -103,8 +105,8 @@ namespace API.Controllers
         [HttpDelete("delete-photo/{photoId}")]
         public async Task<ActionResult> DeletePhoto(int photoId)
         {
-            var user = await _userRepository.GetUserByUserNameAsync(User.GetUsername());
-            var photo = user.Photos.FirstOrDefault(p => p.Id == photoId);
+            AppUser user = await _userRepository.GetUserByUserNameAsync(User.GetUsername());
+            Photo photo = user.Photos.FirstOrDefault(p => p.Id == photoId);
 
             if (photo == null) return NotFound();
 
@@ -112,7 +114,7 @@ namespace API.Controllers
 
             if (photo.PublicId != null)
             {
-                var result = await _photoService.DeletePhotoAsync(photo.PublicId);
+                CloudinaryDotNet.Actions.DeletionResult result = await _photoService.DeletePhotoAsync(photo.PublicId);
                 if (result.Error != null) return BadRequest(result.Error.Message);
             }
             user.Photos.Remove(photo);
