@@ -27,14 +27,23 @@ namespace API.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<MemberDTO>>> GetUsers([FromQuery] UserParams userParams)
         {
-            MemberDTO user = await _userRepository.GetMemberByUsernameAsync(User.GetUsername());
-            userParams.CurrentUserName = user.Username;
+            AppUser user = await _userRepository.GetUserByUserNameAsync(User.GetUsername());
+            userParams.CurrentUserName = user.UserName;
 
-            if (string.IsNullOrWhiteSpace(userParams.Gender))
-                userParams.Gender = user.Gender == "male" ? "male" : "female";
+            if (string.IsNullOrEmpty(userParams.Gender))
+            {
+                userParams.Gender = user.Gender switch
+                {
+                    "male" => "female",
+                    "female" => "male",
+                    _ => "other"
+                };
+            }
 
             PagedList<MemberDTO> users = await _userRepository.GetMembersAsync(userParams);
+
             Response.AddPaginationHeader(users.CurrentPage, users.PageSize, users.TotalCount, users.TotalPages);
+
             return Ok(users);
         }
 

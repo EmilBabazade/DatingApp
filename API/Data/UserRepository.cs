@@ -29,9 +29,19 @@ namespace API.Data
 
         public async Task<PagedList<MemberDTO>> GetMembersAsync(UserParams userParams)
         {
-            IQueryable<AppUser> query = _context.Users.AsQueryable();
+            IQueryable<AppUser> query = _context.Users
+                .Where(u => u.UserName != userParams.CurrentUserName && u.Gender == userParams.Gender);
 
-            query = query.Where(u => u.UserName != userParams.CurrentUserName && u.Gender != userParams.Gender);
+            DateTime minDob = DateTime.Today.AddYears(-userParams.MaxAge - 1);
+            DateTime maxDob = DateTime.Today.AddYears(-userParams.MinAge);
+
+            query = query.Where(u => u.DateOfBirth >= minDob && u.DateOfBirth <= maxDob);
+
+            query = userParams.OrderBy switch
+            {
+                "created" => query.OrderByDescending(u => u.Created),
+                _ => query.OrderByDescending(u => u.LastActive)
+            };
 
             return await PagedList<MemberDTO>.CreateAsync(
                 query.ProjectTo<MemberDTO>(_mapper.ConfigurationProvider).AsNoTracking(),
