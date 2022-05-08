@@ -1,0 +1,8 @@
+.img-circle {
+  max-height: 50px;
+}
+
+.breakWord {
+  word-wrap: break-word;
+  max-width: 100px;
+}

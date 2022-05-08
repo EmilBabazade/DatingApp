@@ -8,18 +8,19 @@ import { PaginatedResult } from '../_models/pagination';
 import { User } from '../_models/user';
 import { UserParams } from '../_models/userParams';
 import { AccountService } from './account.service';
+import { BaseService } from './base.service';
 
 @Injectable({
   providedIn: 'root'
 })
-export class MembersService {
-  private readonly baseUrl = environment.apiUrl;
+export class MembersService extends BaseService {
   members: Member[] = [];
   memberCache = new Map();
   user: User;
   userParams: UserParams;
 
-  constructor(private http: HttpClient, private readonly accountService: AccountService) {
+  constructor(http: HttpClient, private readonly accountService: AccountService) {
+    super(http);
     this.accountService.currentUser$.pipe(take(1)).subscribe(user => {
       this.userParams = new UserParams(user);
       this.user = user;
@@ -95,25 +96,5 @@ export class MembersService {
     let params = this.getPaginationHttpParams(pageNumber, pageSize);
     params = params.append('predicate', predicate);
     return this.getPaginatedResult<Partial<Member[]>>(`${this.baseUrl}likes`, params);
-  }
-
-  private getPaginatedResult<T>(url: string, params: HttpParams): Observable<PaginatedResult<T>> {
-    const paginatedResult = new PaginatedResult<T>();
-    return this.http.get<T>(url, { observe: 'response', params }).pipe(
-      map(response => {
-        paginatedResult.result = response.body;
-        if (response.headers.get('Pagination')) {
-          paginatedResult.pagination = JSON.parse(response.headers.get('Pagination'));
-        }
-        return paginatedResult;
-      })
-    );
-  }
-
-  private getPaginationHttpParams(pageNumber: number, pageSize: number) {
-    let params = new HttpParams();
-    params = params.append('pageNumber', pageNumber.toString());
-    params = params.append('pageSize', pageSize.toString());
-    return params;
   }
 }

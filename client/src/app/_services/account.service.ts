@@ -2,18 +2,19 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, ReplaySubject } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { environment } from 'src/environments/environment';
 import { User } from '../_models/user';
+import { BaseService } from './base.service';
 
 @Injectable({
   providedIn: 'root'
 })
-export class AccountService {
-  private readonly baseUrl = environment.apiUrl;
+export class AccountService extends BaseService {
   private currentUserSource = new ReplaySubject<User| null>(1);
   currentUser$: Observable<User | null> = this.currentUserSource.asObservable();
 
-  constructor(private readonly http: HttpClient) { }
+  constructor(http: HttpClient) {
+    super(http);
+  }
 
   login(model: any): Observable<any> {
     return this.http.post(this.baseUrl + 'account/login', model)

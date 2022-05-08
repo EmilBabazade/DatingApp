@@ -31,22 +31,22 @@
   </div>
   <div class="col-8">
     <tabset class="member-tabset">
-      <tab heading="About {{member.knownAs}}" *ngIf="member.lookingFor || member.introduction">
-        <h4 *ngIf="member.introduction">Description</h4>
+      <tab heading="About {{member.knownAs}}">
+        <h4>Description</h4>
         <p>{{member.introduction}}</p>
-        <h4 *ngIf="member.lookingFor">Looking For</h4>
+        <h4>Looking For</h4>
         <p>{{member.lookingFor}}</p>
       </tab>
-      <tab heading="Interests" *ngIf="member.interests">
-        <h4 *ngIf="member.interests">Interests</h4>
+      <tab heading="Interests">
+        <h4>Interests</h4>
         <p>{{member.interests}}</p>
       </tab>
-      <tab heading="Photos" *ngIf="member.interests">
+      <tab heading="Photos">
         <ngx-gallery [options]="galleryOptions" [images]="galleryImages"
           style="display: inline-block; margin-bottom: 20px;"></ngx-gallery>
       </tab>
       <tab heading="Messages">
-        <p>Messages will go here</p>
+        <app-member-messages [username]="member.username"></app-member-messages>
       </tab>
     </tabset>
   </div>
