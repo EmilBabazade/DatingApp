@@ -91,10 +91,10 @@ export class MembersService {
     return this.http.post(this.baseUrl + 'likes/' + username, {});
   }
 
-  getLikes(predicate: string): Observable<Partial<Member[]>> {
-    let params = new HttpParams();
+  getLikes(predicate: string, pageNumber: number, pageSize: number) {
+    let params = this.getPaginationHttpParams(pageNumber, pageSize);
     params = params.append('predicate', predicate);
-    return this.http.get<Partial<Member[]>>(this.baseUrl + 'likes', {params});
+    return this.getPaginatedResult<Partial<Member[]>>(`${this.baseUrl}likes`, params);
   }
 
   private getPaginatedResult<T>(url: string, params: HttpParams): Observable<PaginatedResult<T>> {

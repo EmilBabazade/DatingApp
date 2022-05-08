@@ -1,13 +1,12 @@
 ﻿using API.DTOs;
 using API.Entities;
 using API.Extensions;
+using API.Helpers;
 using API.Interfaces;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
 {
-    [Authorize]
     public class LikesController : BaseApiController
     {
         private readonly IUserRepository _userRepository;
@@ -48,9 +47,11 @@ namespace API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<LikeDTO>>> GetUserLikes(string predicate)
+        public async Task<ActionResult<PagedList<LikeDTO>>> GetUserLikes([FromQuery] LikesParams likesParams)
         {
-            IEnumerable<LikeDTO> users = await _likesRepository.GetUserLikes(predicate, (int)User.GetUserId());
+            likesParams.UserId = (int)User.GetUserId();
+            PagedList<LikeDTO> users = await _likesRepository.GetUserLikes(likesParams);
+            Response.AddPaginationHeader(users.CurrentPage, users.PageSize, users.TotalCount, users.TotalPages);
             return Ok(users);
         }
     }
