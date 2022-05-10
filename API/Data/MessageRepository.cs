@@ -28,9 +28,12 @@ namespace API.Data
             _context.Messages.Remove(message);
         }
 
-        public async Task<Message> GetMessageAsync(int id)
+        public async Task<Message> GetMessageAsync(int id, bool includeSender = false, bool includeRecipient = false)
         {
-            return await _context.Messages.FindAsync(id);
+            IQueryable<Message> messages = _context.Messages.AsQueryable();
+            if (includeSender) messages = messages.Include(u => u.Sender);
+            if (includeRecipient) messages = messages.Include(u => u.Recipeint);
+            return await messages.SingleOrDefaultAsync(x => x.Id == id);
         }
 
         public async Task<PagedList<MessageDto>> GetMessagesForUserAsync(MessageParams messageParams)
@@ -39,9 +42,9 @@ namespace API.Data
 
             query = messageParams.Container switch
             {
-                "Inbox" => query.Where(u => u.Recipeint.UserName == messageParams.Username),
-                "Outbox" => query.Where(u => u.Sender.UserName == messageParams.Username),
-                _ => query.Where(u => u.Recipeint.UserName == messageParams.Username && u.DateRead == null), // "Unread"
+                "Inbox" => query.Where(u => u.Recipeint.UserName == messageParams.Username && u.RecipientDeleted == false),
+                "Outbox" => query.Where(u => u.Sender.UserName == messageParams.Username && u.SenderDeleted == false),
+                _ => query.Where(u => u.Recipeint.UserName == messageParams.Username && u.RecipientDeleted == false && u.DateRead == null), // "Unread"
             };
 
             IQueryable<MessageDto> messages = query.ProjectTo<MessageDto>(_mapper.ConfigurationProvider);
@@ -55,7 +58,9 @@ namespace API.Data
                 .Include(u => u.Sender).ThenInclude(p => p.Photos)
                 .Include(u => u.Recipeint).ThenInclude(p => p.Photos)
                 .Where(m =>
+                    m.RecipientDeleted == false &&
                     m.Recipeint.UserName == currentUsername && m.Sender.UserName == recipientUsername ||
+                    m.SenderDeleted == false &&
                     m.Recipeint.UserName == recipientUsername && m.Sender.UserName == currentUsername)
                 .OrderBy(m => m.MessageSent)
                 .ToListAsync();
