@@ -1,5 +1,6 @@
 using API.Extensions;
 using API.Middleware;
+using API.SignalR;
 
 namespace API
 {
@@ -17,7 +18,9 @@ namespace API
         {
             services.AddApplicationServices(_config);
             services.AddControllers();
+            services.AddCors();
             services.AddIdentityServices(_config);
+            services.AddSignalR();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -38,6 +41,7 @@ namespace API
             app.UseCors(policy =>
                 policy
                     .AllowAnyHeader()
+                    .AllowCredentials()
                     .AllowAnyMethod()
                     .WithOrigins("http://localhost:4200")
             );
@@ -47,6 +51,7 @@ namespace API
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHub<PresenceHub>("hubs/presence");
             });
         }
     }
